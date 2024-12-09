@@ -1,122 +1,111 @@
 package main
 
 import (
-    "fmt"
-    "net/http"
-    "os"
-    "os/signal"
-    "strconv"
-    "strings"
+	"fmt"
+	"log"
+	"net/http"
+	"strconv"
+	"strings"
 )
 
-type MyHTTPHandler struct{}
+type MyHttpHandler struct{}
 
-func (h *MyHTTPHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-    switch r.Method {
-    case "GET":
-        h.do_GET(w, r)
-    case "POST":
-        h.do_POST(w, r)
-    }
+func (h *MyHttpHandler) printHttpRequestDetail(r *http.Request) {
+	host := r.RemoteAddr
+	hostParts := strings.Split(host, ":")
+	
+	// URL의 전체 경로를 가져옴 (쿼리 파라미터 포함)
+	fullPath := r.URL.Path
+	if r.URL.RawQuery != "" {
+		fullPath = fullPath + "?" + r.URL.RawQuery
+	}
+	
+	fmt.Printf("::Client address   : %s\n", hostParts[0])
+	fmt.Printf("::Client port      : %s\n", hostParts[1])
+	fmt.Printf("::Request command  : %s\n", r.Method)
+	fmt.Printf("::Request line     : %s %s %s\n", r.Method, fullPath, r.Proto)
+	fmt.Printf("::Request path     : %s\n", fullPath)
+	fmt.Printf("::Request version  : %s\n", r.Proto)
 }
 
-func (h *MyHTTPHandler) printHTTPRequestDetail(w http.ResponseWriter, r *http.Request) {
-    fmt.Printf("::Client address  : %s\n", r.RemoteAddr[:strings.LastIndex(r.RemoteAddr, ":")])
-    fmt.Printf("::Client port     : %s\n", r.RemoteAddr[strings.LastIndex(r.RemoteAddr, ":")+1:])
-    fmt.Printf("::Request command : %s\n", r.Method)
-    fmt.Printf("::Request line    : %s %s %s\n", r.Method, r.URL.Path, r.Proto)
-    fmt.Printf("::Request path    : %s\n", r.URL.Path)
-    fmt.Printf("::Request version : %s\n", r.Proto)
+func (h *MyHttpHandler) simpleCalc(para1, para2 int) int {
+	return para1 * para2
 }
 
-func (h *MyHTTPHandler) sendHTTPResponseHeader(w http.ResponseWriter) {
-    w.WriteHeader(http.StatusOK)
-    w.Header().Set("Content-Type", "text/html")
+func (h *MyHttpHandler) parameterRetrieval(msg string) []int {
+	result := make([]int, 2)
+	fields := strings.Split(msg, "&")
+	
+	for _, field := range fields {
+		parts := strings.Split(field, "=")
+		if len(parts) == 2 {
+			val, _ := strconv.Atoi(parts[1])
+			if strings.HasPrefix(parts[0], "var1") {
+				result[0] = val
+			} else if strings.HasPrefix(parts[0], "var2") {
+				result[1] = val
+			}
+		}
+	}
+	return result
 }
 
-func parameterRetrieval(msg string) []int {
-    var result []int
-    fields := strings.Split(msg, "&")
-    for _, field := range fields {
-        parts := strings.Split(field, "=")
-        if len(parts) > 1 {
-            if num, err := strconv.Atoi(parts[1]); err == nil {
-                result = append(result, num)
-            }
-        }
-    }
-    return result
-}
+func (h *MyHttpHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "text/html")
+	
+	switch r.Method {
+	case "GET":
+		fmt.Println("## do_GET() activated.")
+		h.printHttpRequestDetail(r)
 
-func simpleCalc(para1, para2 int) int {
-    return para1 * para2
-}
+		if r.URL.RawQuery != "" {
+			params := h.parameterRetrieval(r.URL.RawQuery)
+			result := h.simpleCalc(params[0], params[1])
+			
+			fmt.Fprintf(w, "<html>GET request for calculation => %d x %d = %d</html>", 
+				params[0], params[1], result)
+			fmt.Printf("## GET request for calculation => %d x %d = %d.\n", 
+				params[0], params[1], result)
+		} else {
+			fmt.Fprintf(w, "<html><p>HTTP Request GET for Path: %s</p></html>", r.URL.Path)
+			fmt.Printf("## GET request for directory => %s.\n", r.URL.Path)
+		}
 
-func (h *MyHTTPHandler) do_GET(w http.ResponseWriter, r *http.Request) {
-    fmt.Println("## do_GET() activated.")
-    h.printHTTPRequestDetail(w, r)
-    h.sendHTTPResponseHeader(w)
+	case "POST":
+		fmt.Println("## do_POST() activated.")
+		h.printHttpRequestDetail(r)
 
-    if strings.Contains(r.URL.Path, "?") {
-        params := parameterRetrieval(r.URL.RawQuery)
-        if len(params) >= 2 {
-            result := simpleCalc(params[0], params[1])
-            fmt.Fprintf(w, "<html>")
-            fmt.Fprintf(w, "GET request for calculation => %d x %d = %d", params[0], params[1], result)
-            fmt.Fprintf(w, "</html>")
-            fmt.Printf("## GET request for calculation => %d x %d = %d\n", params[0], params[1], result)
-        }
-    } else {
-        fmt.Fprintf(w, "<html><p>HTTP Request GET for Path: %s</p></html>", r.URL.Path)
-        fmt.Printf("## GET request for directory => %s\n", r.URL.Path)
-    }
-}
+		r.ParseForm()
+		var1, _ := strconv.Atoi(r.FormValue("var1"))
+		var2, _ := strconv.Atoi(r.FormValue("var2"))
+		result := h.simpleCalc(var1, var2)
 
-func (h *MyHTTPHandler) do_POST(w http.ResponseWriter, r *http.Request) {
-    fmt.Println("## do_POST() activated.")
-    h.printHTTPRequestDetail(w, r)
-    h.sendHTTPResponseHeader(w)
-
-    if err := r.ParseForm(); err != nil {
-        http.Error(w, "Error parsing form", http.StatusBadRequest)
-        return
-    }
-
-    var1 := r.FormValue("var1")
-    var2 := r.FormValue("var2")
-    num1, _ := strconv.Atoi(var1)
-    num2, _ := strconv.Atoi(var2)
-    result := simpleCalc(num1, num2)
-
-    fmt.Fprintf(w, "POST request for calculation => %d x %d = %d", num1, num2, result)
-    fmt.Printf("## POST request for calculation => %d x %d = %d\n", num1, num2, result)
+		postData := fmt.Sprintf("var1=%s&var2=%s", r.FormValue("var1"), r.FormValue("var2"))
+		fmt.Printf("## POST request data => %s.\n", postData)
+		
+		response := fmt.Sprintf("POST request for calculation => %d x %d = %d", var1, var2, result)
+		fmt.Fprint(w, response)
+		fmt.Printf("## POST request for calculation => %d x %d = %d.\n", var1, var2, result)
+	}
 }
 
 func main() {
-    serverName := "localhost"
-    serverPort := 8080
+	serverName := "localhost"
+	serverPort := 8080
+	
+	handler := &MyHttpHandler{}
+	server := &http.Server{
+		Addr:    fmt.Sprintf("%s:%d", serverName, serverPort),
+		Handler: handler,
+	}
 
-    handler := &MyHTTPHandler{}
-    
-    fmt.Printf("## HTTP server started at http://%s:%d\n", serverName, serverPort)
+	fmt.Printf("## HTTP server started at http://%s:%d.\n", serverName, serverPort)
 
-    server := &http.Server{
-        Addr:    fmt.Sprintf("%s:%d", serverName, serverPort),
-        Handler: handler,
-    }
+	if err := server.ListenAndServe(); err != nil {
+		if err != http.ErrServerClosed {
+			log.Fatal(err)
+		}
+	}
 
-    // Handle graceful shutdown
-    c := make(chan os.Signal, 1)
-    signal.Notify(c, os.Interrupt)
-
-    go func() {
-        <-c
-        fmt.Println("HTTP server stopped.")
-        server.Close()
-        os.Exit(0)
-    }()
-
-    if err := server.ListenAndServe(); err != nil {
-        fmt.Printf("Server error: %v\n", err)
-    }
+	fmt.Println("HTTP server stopped.")
 }
