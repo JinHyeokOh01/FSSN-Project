@@ -6,7 +6,6 @@ import (
 	"os"
 )
 
-// SuperHeroSquad represents the main JSON structure
 type SuperHeroSquad struct {
 	SquadName  string   `json:"squadName"`
 	HomeTown   string   `json:"homeTown"`
@@ -16,7 +15,6 @@ type SuperHeroSquad struct {
 	Members    []Member `json:"members"`
 }
 
-// Member represents each superhero's data
 type Member struct {
 	Name           string   `json:"name"`
 	Age            int      `json:"age"`
@@ -25,7 +23,6 @@ type Member struct {
 }
 
 func main() {
-	// JSON 파일 읽기
 	jsonFile, err := os.ReadFile("lec-06-prg-03-json-example.json")
 	if err != nil {
 		fmt.Printf("파일 읽기 오류: %v\n", err)
@@ -38,7 +35,6 @@ func main() {
 		return
 	}
 
-	// Python 예제와 동일한 데이터 출력
 	fmt.Println(superHeroes.HomeTown)
 	fmt.Println(superHeroes.Active)
 	fmt.Println(superHeroes.Members[1].Powers[2])

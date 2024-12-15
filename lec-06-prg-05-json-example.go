@@ -6,7 +6,6 @@ import (
 )
 
 func main() {
-	// Define the source data structure
 	superHeroesSource := map[string]interface{}{
 		"squadName":  "Super hero squad",
 		"homeTown":   "Metro City",
@@ -49,13 +48,11 @@ func main() {
 		},
 	}
 
-	// Convert to JSON with indentation
 	superHeroes, err := json.MarshalIndent(superHeroesSource, "", "    ")
 	if err != nil {
 		fmt.Printf("Error marshaling to JSON: %v\n", err)
 		return
 	}
 
-	// Print the JSON string
 	fmt.Println(string(superHeroes))
 }

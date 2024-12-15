@@ -14,7 +14,6 @@ func (h *MyHttpHandler) printHttpRequestDetail(r *http.Request) {
 	host := r.RemoteAddr
 	hostParts := strings.Split(host, ":")
 	
-	// URL의 전체 경로를 가져옴 (쿼리 파라미터 포함)
 	fullPath := r.URL.Path
 	if r.URL.RawQuery != "" {
 		fullPath = fullPath + "?" + r.URL.RawQuery

@@ -11,7 +11,6 @@ import (
 func main() {
 	fmt.Println("## HTTP client started.")
 
-	// GET request for directory
 	fmt.Println("## GET request for http://localhost:8080/temp/")
 	resp, err := http.Get("http://localhost:8080/temp/")
 	if err != nil {
@@ -25,7 +24,6 @@ func main() {
 	fmt.Println(string(body))
 	fmt.Println("## GET response [end]")
 
-	// GET request for calculation
 	fmt.Println("## GET request for http://localhost:8080/?var1=9&var2=9")
 	resp, err = http.Get("http://localhost:8080/?var1=9&var2=9")
 	if err != nil {
@@ -39,7 +37,6 @@ func main() {
 	fmt.Println(string(body))
 	fmt.Println("## GET response [end]")
 
-	// POST request
 	fmt.Println("## POST request for http://localhost:8080/ with var1 is 9 and var2 is 9")
 	data := url.Values{}
 	data.Set("var1", "9")

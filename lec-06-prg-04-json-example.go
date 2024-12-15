@@ -6,7 +6,6 @@ import (
 	"os"
 )
 
-// SuperHeroSquad represents the main JSON structure
 type SuperHeroSquad struct {
 	SquadName  string   `json:"squadName"`
 	HomeTown   string   `json:"homeTown"`
@@ -16,7 +15,6 @@ type SuperHeroSquad struct {
 	Members    []Member `json:"members"`
 }
 
-// Member represents each superhero's data
 type Member struct {
 	Name           string   `json:"name"`
 	Age            int      `json:"age"`
@@ -25,7 +23,6 @@ type Member struct {
 }
 
 func main() {
-	// Go에서 데이터 구조 생성
 	superHeroes := SuperHeroSquad{
 		SquadName:  "Super hero squad",
 		HomeTown:   "Metro City",
@@ -54,12 +51,10 @@ func main() {
 		},
 	}
 
-	// 데이터 출력
 	fmt.Println(superHeroes.HomeTown)
 	fmt.Println(superHeroes.Active)
 	fmt.Println(superHeroes.Members[1].Powers[2])
 
-	// JSON 파일로 저장
 	jsonData, err := json.MarshalIndent(superHeroes, "", "\t")
 	if err != nil {
 		fmt.Printf("JSON 변환 오류: %v\n", err)

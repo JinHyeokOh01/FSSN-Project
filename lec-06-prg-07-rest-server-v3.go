@@ -4,12 +4,10 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// MembershipHandler handles the membership database operations
 type MembershipHandler struct {
 	database map[string]string
 }
 
-// Create handles POST requests
 func (h *MembershipHandler) Create(c *gin.Context) {
 	id := c.Param("member_id")
 	value := c.PostForm(id)
@@ -22,7 +20,6 @@ func (h *MembershipHandler) Create(c *gin.Context) {
 	c.JSON(200, gin.H{id: h.database[id]})
 }
 
-// Read handles GET requests
 func (h *MembershipHandler) Read(c *gin.Context) {
 	id := c.Param("member_id")
 
@@ -33,7 +30,6 @@ func (h *MembershipHandler) Read(c *gin.Context) {
 	c.JSON(200, gin.H{id: "None"})
 }
 
-// Update handles PUT requests
 func (h *MembershipHandler) Update(c *gin.Context) {
 	id := c.Param("member_id")
 	value := c.PostForm(id)
@@ -46,7 +42,6 @@ func (h *MembershipHandler) Update(c *gin.Context) {
 	c.JSON(200, gin.H{id: h.database[id]})
 }
 
-// Delete handles DELETE requests
 func (h *MembershipHandler) Delete(c *gin.Context) {
 	id := c.Param("member_id")
 
